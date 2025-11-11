@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reset Password | FX Habit Tracker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="login-container">
+    <h2>Create New Password</h2>
+    <p>Enter your new password below to reset your account.</p>
+
+    <input type="password" id="new-password" placeholder="New Password" required>
+    <input type="password" id="confirm-password" placeholder="Confirm Password" required>
+    <button id="update-btn">Update Password</button>
+
+    <p class="small-text">
+      Remembered your password? <a href="login.html">Back to Login</a>
+    </p>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+    const SUPABASE_URL = "https://vmrbnsczaxosshyfxcyu.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZtcmJuc2N6YXhvc3NoeWZ4Y3l1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MTk1MzAsImV4cCI6MjA3ODM5NTUzMH0.cWuQ-q-_F2afm17PXvVj23T5_vXjVxatEYyXuCo0VcI";
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const updateBtn = document.getElementById("update-btn");
+    updateBtn.addEventListener("click", async () => {
+      const newPassword = document.getElementById("new-password").value;
+      const confirmPassword = document.getElementById("confirm-password").value;
+
+      if (newPassword !== confirmPassword) {
+        alert("Passwords do not match!");
+        return;
+      }
+
+      const { data, error } = await supabase.auth.updateUser({ password: newPassword });
+
+      if (error) {
+        alert("Error: " + error.message);
+      } else {
+        alert("Password updated successfully!");
+        window.location.href = "login.html";
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | FX Habit Tracker</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .forgot-link {
+      display: block;
+      margin: 8px 0 16px;
+      text-align: left;
+      font-size: 0.9em;
+      color: #333;
+      text-decoration: none;
+    }
+    .forgot-link:hover {
+      text-decoration: underline;
+    }   
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>Welcome Back</h2>
+    <p>Sign in to track your progress and stay consistent.</p>
+
+    <input type="email" id="login-email" placeholder="Email" required>
+    <input type="password" id="login-password" placeholder="Password" required>
+
+    <a href="forgot-password.html" class="forgot-link">Forgot Password?</a>
+
+    <button id="login-btn">Sign In</button>
+
+    <p style="margin: 20px 0;">or</p>
+    <button id="google-login">Sign in with Google</button>
+
+    <p class="small-text">
+      Don’t have an account? <a href="signup.html">Create one</a>
+    </p>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+    // Supabase credentials
+    const SUPABASE_URL = "https://vmrbnsczaxosshyfxcyu.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZtcmJuc2N6YXhvc3NoeWZ4Y3l1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MTk1MzAsImV4cCI6MjA3ODM5NTUzMH0.cWuQ-q-_F2afm17PXvVj23T5_vXjVxatEYyXuCo0VcI";
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Email & password login
+    const loginBtn = document.getElementById("login-btn");
+    loginBtn.addEventListener("click", async () => {
+      const email = document.getElementById("login-email").value;
+      const password = document.getElementById("login-password").value;
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+      });
+
+      if (error) {
+        alert("Login failed: " + error.message);
+        console.error(error);
+      } else {
+        alert("Login successful!");
+        window.location.href = "app.html"; // ✅ redirect to app after login
+      }
+    });
+
+    // Google login
+    const googleBtn = document.getElementById("google-login");
+    googleBtn.addEventListener("click", async () => {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+      });
+      if (error) alert("Google login failed: " + error.message);
+    });
+  </script>
+</body>
+</html>

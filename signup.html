@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up | FX Habit Tracker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="login-container">
+    <h2>Create Account</h2>
+    <p>Join FX Habit Tracker — start building better routines today.</p>
+
+    <input type="email" id="signup-email" placeholder="Email" required>
+    <input type="password" id="signup-password" placeholder="Password" required>
+    <small>Password must be at least 8 characters, include a number and a capital letter.</small>
+    <button id="signup-btn">Sign Up</button>
+
+    <p style="margin: 20px 0;">or</p>
+    <button id="google-signup">Sign up with Google</button>
+
+    <p class="small-text">
+      Already have an account? <a href="login.html">Sign in</a>
+    </p>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+    // Your Supabase credentials
+    const SUPABASE_URL = "https://vmrbnsczaxosshyfxcyu.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZtcmJuc2N6YXhvc3NoeWZ4Y3l1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MTk1MzAsImV4cCI6MjA3ODM5NTUzMH0.cWuQ-q-_F2afm17PXvVj23T5_vXjVxatEYyXuCo0VcI";
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Email & password signup
+    const signupBtn = document.getElementById("signup-btn");
+    signupBtn.addEventListener("click", async () => {
+      const email = document.getElementById("signup-email").value;
+      const password = document.getElementById("signup-password").value;
+
+      const { data, error } = await supabase.auth.signUp({
+        email: email,
+        password: password,
+      });
+
+      if (error) {
+        alert("Signup failed: " + error.message);
+        console.error(error);
+      } else {
+        alert("Account created! Please check your email to confirm your account.");
+        window.location.href = "login.html";
+      }
+    });
+
+    // Google signup
+    const googleBtn = document.getElementById("google-signup");
+    googleBtn.addEventListener("click", async () => {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+      });
+      if (error) alert("Google sign-up failed: " + error.message);
+    });
+  </script>
+</body>
+</html>

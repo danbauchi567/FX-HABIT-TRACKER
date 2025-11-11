@@ -1,0 +1,884 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>FX Habit Tracker</title>
+<meta name="description" content="FX Habit Tracker — Simple, beautiful habit tracker. PWA-ready." />
+<!-- PWA manifest hint (create manifest.json and service-worker.js later) -->
+<link rel="manifest" href="manifest.json" />
+<style>
+/* --- Slide-out Menu --- */
+#menuOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s;
+  z-index: 90;
+}
+
+#sideMenu {
+  position: fixed;
+  top: 0;
+  right: -260px;
+  width: 240px;
+  height: 100%;
+  background: var(--primary);
+  color: var(--bg);
+  box-shadow: -4px 0 12px rgba(0,0,0,0.3);
+  transition: right 0.3s;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  border-top-left-radius: 14px;
+  border-bottom-left-radius: 14px;
+}
+
+#sideMenu.open { right: 0; }
+#menuOverlay.show { opacity: 1; visibility: visible; }
+
+#sideMenu .menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+#sideMenu h2 {
+  font-size: 18px;
+  color: var(--accent);
+  margin: 0;
+}
+
+#sideMenu button, 
+#sideMenu a {
+  background: none;
+  border: none;
+  color: var(--bg);
+  font-size: 16px;
+  text-decoration: none;
+  cursor: pointer;
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 6px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+#sideMenu a:hover, 
+#sideMenu button:hover {
+  background: rgba(181,203,183,0.2);
+}
+
+#sideMenu details summary {
+  list-style: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--accent);
+}
+
+#sideMenu details button {
+  font-size: 14px;
+  color: var(--bg);
+  margin-top: 6px;
+}
+  :root{
+    --bg:#F3EFE6; /* Soft Beige */
+    --card:#ffffff;
+    --primary:#2E2E2E; /* Charcoal */
+    --accent:#B5CBB7; /* Sage */
+    --muted:#7b7b7b;
+    --success:#28a745;
+    --danger:#e74c3c;
+    --glass: rgba(255,255,255,0.6);
+    --radius:12px;
+    --maxw:900px;
+  }
+  html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
+  body{background:linear-gradient(180deg,var(--bg),#efece3); color:var(--primary); display:flex; justify-content:center; padding:18px;}
+  .app{width:100%; max-width:var(--maxw); margin:12px; display:flex; flex-direction:column; gap:14px;}
+  header{display:flex;align-items:center;gap:12px;padding:12px;border-radius:var(--radius); background:rgba(255,255,255,0.8);box-shadow:0 6px 20px rgba(46,46,46,0.06);}
+  #logo{width:46px;height:46px;object-fit:contain;border-radius:8px;background:linear-gradient(180deg,var(--accent),#c7d8c8);display:inline-block;}
+  .title{flex:1}
+  .title h1{margin:0;font-size:18px;letter-spacing:0.6px;}
+  .title p{margin:0;color:var(--muted);font-size:12px}
+  .top-actions{display:flex;gap:8px;align-items:center}
+  button.icon{background:none;border:0;padding:8px;border-radius:10px;cursor:pointer}
+  /* Ad placeholders */
+  .ad-slot{background:#eee;border:2px dashed #ccc;padding:8px;border-radius:10px;text-align:center;color:#666;font-size:12px}
+  /* main layout */
+  main{display:flex;flex-direction:column;gap:12px}
+  .summary{display:flex;gap:12px;align-items:center;padding:12px;border-radius:12px;background:var(--card);box-shadow:0 8px 18px rgba(46,46,46,0.04)}
+  .progress-ring{width:86px;height:86px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(180deg,var(--accent),#9fbda1); color:white;font-weight:700;}
+  .summary .meta{flex:1}
+  .add-habit{display:flex;gap:8px}
+  input[type=text]{padding:10px;border-radius:10px;border:1px solid #ddd;flex:1}
+  select, .btn{padding:10px;border-radius:10px;border:0;background:var(--primary);color:white;cursor:pointer}
+  .btn.secondary{background:transparent;color:var(--primary);border:1px solid #ddd}
+  .feed{display:flex;flex-direction:column;gap:12px}
+  .habit-card{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:12px;background:var(--card);box-shadow:0 8px 18px rgba(46,46,46,0.04);position:relative}
+  .habit-top{display:flex;align-items:center;gap:12px}
+  .habit-title{flex:1}
+  .habit-controls{display:flex;gap:8px;align-items:center}
+  .big-check{width:56px;height:56px;border-radius:14px;border:0;font-weight:700;font-size:22px;cursor:pointer;background:linear-gradient(180deg,var(--accent),#9fbda1);color:var(--primary)}
+  .heatmap{display:flex;gap:4px;flex-wrap:wrap}
+  .heat-day{width:12px;height:12px;border-radius:3px;background:#eee}
+  .heat-day.done{background:var(--primary)}
+  .small{font-size:12px;color:var(--muted)}
+  .meta-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .badge{padding:6px 8px;border-radius:999px;background:var(--accent);color:var(--primary);font-weight:600}
+  .confetti{position:absolute;right:12px;top:12px}
+  .notes{padding:8px;border-radius:8px;background:rgba(0,0,0,0.03)}
+  /* bottom nav */
+  nav.bottom{display:flex;gap:8px;justify-content:space-between;padding:10px;border-radius:12px;background:rgba(255,255,255,0.9);position:sticky;bottom:12px}
+  nav.bottom button{flex:1;padding:10px;border-radius:10px;border:0;background:transparent;cursor:pointer}
+  /* small screens */
+  @media(max-width:520px){
+    .heat-day{width:10px;height:10px}
+    .big-check{width:48px;height:48px}
+  }
+
+  /* dark mode */
+  body.dark{background:#0e0e0f;color:#eaeaea}
+  body.dark .app{filter: none}
+  body.dark header{background:#1e1e1f}
+  body.dark .card, body.dark .habit-card{background:#161616;color:#eaeaea}
+  body.dark .ad-slot{background:#222;border-color:#333;color:#aaa}
+</style>
+</head>
+
+<body>
+<div class="app" id="app">
+  <header>
+    <img id="logo" src="assetslogo-placeholder.png" alt="FX logo" />
+    <div class="title">
+      <h1>FX Habit Tracker</h1>
+      <p>Build better routines — streaks, notes, calendar & rewards</p>
+    </div>
+    <div class="top-actions">
+      <a href="menu.html" class="icon" title="Menu">☰</a>
+    </div>
+  </header>
+
+  <!-- Top Ad placeholder -->
+  <div id="ad-top" class="ad-slot">Ad placeholder (Top banner) — paste AdSense code here</div>
+
+  <main>
+    <!-- Summary -->
+    <section class="summary" aria-label="Today summary">
+      <div class="progress-ring" id="todayPercent">0%</div>
+      <div class="meta">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-weight:700" id="todayDoneCount">0 of 0</div>
+            <div class="small">Habits completed today</div>
+          </div>
+          <div style="text-align:right">
+            <div class="small">Points</div>
+            <div style="font-weight:800" id="pointsCount">0</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;display:flex;gap:8px;align-items:center;">
+          <div class="badge" id="streakBadge">Streak: 0</div>
+          <div class="small" id="bestStreak">Best: 0</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Add new habit -->
+    <section style="display:flex;flex-direction:column;gap:8px;">
+      <form id="addHabitForm" class="add-habit" onsubmit="return false;">
+        <input id="habitTitle" placeholder="Add habit — e.g., Drink water" required />
+        <select id="habitCategory">
+          <option value="Health">Health</option>
+          <option value="Productivity">Productivity</option>
+          <option value="Study">Study</option>
+          <option value="Fitness">Fitness</option>
+          <option value="Custom">Custom</option>
+        </select>
+        <button class="btn" id="addBtn">Add</button>
+      </form>
+      <div class="small">Tip: Add daily reminder after creating habits. Reminders work best when installed as PWA.</div>
+    </section>
+
+    <!-- Inline ad -->
+    <div id="ad-inline" class="ad-slot">Ad placeholder (Inline) — paste AdSense code here</div>
+
+    <!-- Feed -->
+    <section class="feed" id="feed">
+      <!-- Habit cards will go here -->
+    </section>
+
+    <!-- Stats & charts -->
+    <section class="habit-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <h3 style="margin:0">Weekly Overview</h3>
+          <div class="small">Simple completion trend</div>
+        </div>
+        <div class="small">Export / Premium charts</div>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+        <div style="flex:1;min-width:220px;">
+          <svg id="weeklyChart" width="100%" height="80"></svg>
+        </div>
+        <div style="min-width:160px">
+          <div class="small">Success Rate</div>
+          <div id="successRateLarge" style="font-weight:800;font-size:20px">0%</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Motivational card + AI suggestions stub -->
+    <section class="habit-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <h3 style="margin:0">Daily Inspiration</h3>
+          <div class="small">Quote & suggestions</div>
+        </div>
+        <div>
+          <button class="btn secondary" id="newQuoteBtn">New</button>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <blockquote id="quoteText" style="margin:0;font-style:italic">“Start small. Consistency compounds.”</blockquote>
+        <div class="small" id="quoteAuthor">— FX Tips</div>
+
+        <div style="margin-top:10px;">
+          <h4 style="margin:6px 0">Suggested habits</h4>
+          <div id="aiSuggestions" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bottom ad -->
+    <div id="ad-bottom" class="ad-slot">Ad placeholder (Bottom sticky) — paste AdSense code here</div>
+
+  </main>
+
+ 
+</div>
+<!-- Slide-out menu -->
+<div id="menuOverlay"></div>
+<nav id="sideMenu" aria-hidden="true">
+  <div class="menu-header">
+    <h2>Menu</h2>
+    <button id="closeMenu" aria-label="Close menu">✕</button>
+  </div>
+  <ul>
+    <li><a href="app.html">🏠 home</a></li>
+    <li><a href="stats.html">📊 Stats</a></li>
+    <li><a href="about.html">ℹ️ About</a></li>
+    <li><a href="calendar.html">📅 Calendar</a></li>
+    <li class="settings">
+      <details>
+        <summary>⚙️ Settings</summary>
+        <!-- Use unique IDs so they don't clash with header buttons -->
+        <button id="themeToggleMenu" type="button">Toggle Dark Mode 🌓</button>
+        <button id="syncBtnMenu" type="button">Cloud Sync ☁️</button>
+      </details>
+    </li>
+  </ul>
+</nav>
+<!-- Modal / calendar / note editor (simple) -->
+<div id="modal" style="display:none;position:fixed;inset:0;align-items:center;justify-content:center;background:rgba(0,0,0,0.4);">
+  <div style="background:white;padding:16px;border-radius:12px;max-width:520px;width:92%;box-shadow:0 30px 80px rgba(0,0,0,0.4);">
+    <div id="modalContent"></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;">
+      <button class="btn secondary" id="modalClose">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/*
+ FX Habit Tracker - Single File App
+ - Uses localStorage for persistence (simple wrapper)
+ - Stores dates as ISO (UTC) but computes local day boundaries via local zone offset
+ - Many advanced features are present as client-side functionality
+*/
+
+// ---------- Utilities ----------
+const uid = () => Math.random().toString(36).slice(2,9);
+const todayISO_UTC = () => {
+  const d = new Date();
+  // compute local midnight in UTC ISO for storage clarity:
+  const tzOffset = d.getTimezoneOffset(); // minutes
+  const localMid = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  return localMid.toISOString().slice(0,10); // YYYY-MM-DD
+};
+const formatISOToLocalDate = iso => {
+  // iso = 'YYYY-MM-DD' -> return JS Date at local midnight
+  const [y,m,d] = iso.split('-').map(Number);
+  return new Date(y,m-1,d);
+};
+const daysBetween = (isoA, isoB) => {
+  const a = formatISOToLocalDate(isoA);
+  const b = formatISOToLocalDate(isoB);
+  return Math.round((b - a)/(24*60*60*1000));
+};
+
+// -------- Storage wrapper ----------
+const STORE_KEY = 'fx_habit_store_v1';
+const defaultStore = {habits:[], meta:{points:0, bestStreak:0}};
+function readStore(){ try { return JSON.parse(localStorage.getItem(STORE_KEY) || JSON.stringify(defaultStore)); } catch(e){ return JSON.parse(JSON.stringify(defaultStore)); } }
+function writeStore(s){ localStorage.setItem(STORE_KEY, JSON.stringify(s)); }
+
+let store = readStore();
+
+// ---------- Core model functions ----------
+function createHabit({title,category='Custom'}) {
+  const h = {
+    id: uid(),
+    title: title,
+    category: category,
+    createdAt: new Date().toISOString(),
+    history: {}, // { 'YYYY-MM-DD': {done:true, note:"" } }
+    points: 0,
+    bestStreak:0,
+    color: null,
+  };
+  store.habits.unshift(h);
+  writeStore(store);
+  renderAll();
+  return h;
+}
+
+function toggleHabitForDate(habitId, isoDate) {
+  const h = store.habits.find(x=>x.id===habitId);
+  if(!h) return;
+  const prev = h.history[isoDate] && h.history[isoDate].done;
+  if(prev) {
+    // undo
+    delete h.history[isoDate];
+    // adjust points
+    h.points = Math.max(0, (h.points||0)-1);
+    store.meta.points = Math.max(0, (store.meta.points||0)-1);
+  } else {
+    h.history[isoDate] = {done:true, note: h.history[isoDate]?.note || ''};
+    h.points = (h.points||0) + 1;
+    store.meta.points = (store.meta.points||0) + 1;
+  }
+  // recompute best streak for habit
+  h.bestStreak = computeBestStreak(h);
+  store.meta.bestStreak = Math.max(store.meta.bestStreak || 0, h.bestStreak);
+  writeStore(store);
+  renderAll();
+}
+
+function setNote(habitId, isoDate, note) {
+  const h = store.habits.find(x=>x.id===habitId);
+  if(!h) return;
+  h.history[isoDate] = h.history[isoDate] || {done:false, note:''};
+  h.history[isoDate].note = note || '';
+  writeStore(store);
+  renderAll();
+}
+
+// ---------- Streaks & stats ----------
+function computeStreak(habit) {
+  // consecutive true values ending today
+  let count = 0;
+  const today = todayISO_UTC();
+  while(true) {
+    const iso = new Date(formatISOToLocalDate(today).getTime() - (count*24*3600*1000));
+    const ymd = iso.toISOString().slice(0,10);
+    if(habit.history[ymd] && habit.history[ymd].done) count++;
+    else break;
+  }
+  return count;
+}
+
+function computeBestStreak(habit) {
+  // scan history for longest consecutive run
+  const dates = Object.keys(habit.history).filter(d=>habit.history[d].done).sort();
+  if(!dates.length) return 0;
+  let best=0, cur=1;
+  for(let i=1;i<dates.length;i++){
+    if(daysBetween(dates[i-1], dates[i]) === 1) cur++;
+    else { best = Math.max(best,cur); cur = 1; }
+  }
+  best = Math.max(best, cur);
+  return best;
+}
+
+function computeSuccessRate() {
+  let completed=0, total=0;
+  store.habits.forEach(h=>{
+    const keys = Object.keys(h.history);
+    const tracked = keys.length;
+    total += tracked;
+    completed += keys.filter(k=>h.history[k].done).length;
+  });
+  if(total===0) return 0;
+  return Math.round((completed/total)*100);
+}
+
+// ---------- Rendering ----------
+const feedEl = document.getElementById('feed');
+const todayPercentEl = document.getElementById('todayPercent');
+const todayDoneCountEl = document.getElementById('todayDoneCount');
+const pointsCountEl = document.getElementById('pointsCount');
+const streakBadgeEl = document.getElementById('streakBadge');
+const bestStreakEl = document.getElementById('bestStreak');
+const weeklyChartSVG = document.getElementById('weeklyChart');
+const successRateLarge = document.getElementById('successRateLarge');
+const quoteText = document.getElementById('quoteText');
+const quoteAuthor = document.getElementById('quoteAuthor');
+const aiSuggestions = document.getElementById('aiSuggestions');
+
+function renderAll(){
+  store = readStore();
+  renderFeed();
+  renderSummary();
+  renderWeeklyChart();
+  renderInspiration();
+}
+
+function renderFeed(){
+  feedEl.innerHTML = '';
+  if(store.habits.length===0) {
+    const el = document.createElement('div');
+    el.className = 'habit-card';
+    el.innerHTML = '<h3 style="margin:0">No habits yet</h3><div class="small">Add a habit above and start your streak!</div>';
+    feedEl.appendChild(el);
+    return;
+  }
+  store.habits.forEach(h=>{
+    const card = document.createElement('div');
+    card.className = 'habit-card';
+    // header
+    const top = document.createElement('div'); top.className = 'habit-top';
+    const title = document.createElement('div'); title.className = 'habit-title';
+    title.innerHTML = `<div style="font-weight:700">${escapeHtml(h.title)}</div><div class="small">${h.category} • Created ${(new Date(h.createdAt)).toLocaleDateString()}</div>`;
+    const controls = document.createElement('div'); controls.className='habit-controls';
+    const checkBtn = document.createElement('button'); checkBtn.className='big-check';
+    checkBtn.textContent = (h.history[todayISO_UTC()] && h.history[todayISO_UTC()].done) ? '✓' : '+';
+    checkBtn.title = 'Mark today complete';
+    checkBtn.onclick = ()=> {
+      // disable re-check if already done for today (toggle behavior included)
+      const iso = todayISO_UTC();
+      toggleHabitForDate(h.id, iso);
+      // show confetti if milestone reached
+      const newStreak = computeStreak(store.habits.find(x=>x.id===h.id));
+      if(newStreak>0 && [5,10,30,100].includes(newStreak)){
+        toast(`🔥 ${h.title} — ${newStreak} day streak!`);
+      }
+    };
+    controls.appendChild(checkBtn);
+
+    const menuBtn = document.createElement('button'); menuBtn.className='icon'; menuBtn.textContent='⋯';
+    menuBtn.onclick = (e) => { openHabitModal(h.id); };
+    controls.appendChild(menuBtn);
+
+    top.appendChild(title);
+    top.appendChild(controls);
+    card.appendChild(top);
+
+    // meta row
+    const meta = document.createElement('div'); meta.className = 'meta-row';
+    const streak = computeStreak(h);
+    const best = computeBestStreak(h);
+    meta.innerHTML = `<div class="small">Today: <strong>${(h.history[todayISO_UTC()]?.done)?'Done':'Not yet'}</strong></div>
+                      <div class="small">Streak: <strong>${streak}</strong></div>
+                      <div class="small">Best: <strong>${best}</strong></div>
+                      <div class="small">Points: <strong>${h.points||0}</strong></div>`;
+    card.appendChild(meta);
+
+    // heatmap (last 30 days)
+    const heat = document.createElement('div'); heat.className = 'heatmap';
+    const DAYS=30;
+    for(let i=DAYS-1;i>=0;i--){
+      const dt = new Date(formatISOToLocalDate(todayISO_UTC()).getTime() - i*24*3600*1000);
+      const iso = dt.toISOString().slice(0,10);
+      const dEl = document.createElement('div');
+      dEl.className = 'heat-day' + ((h.history[iso] && h.history[iso].done) ? ' done' : '');
+      dEl.title = iso + (h.history[iso]?.note ? ' — note: ' + h.history[iso].note : '');
+      dEl.onclick = ()=> { openDayEditor(h.id, iso); };
+      heat.appendChild(dEl);
+    }
+    card.appendChild(heat);
+
+    // notes preview
+    const notePreview = document.createElement('div'); notePreview.className='notes small';
+    const latestNoteDate = Object.keys(h.history).reverse().find(d=>h.history[d].note && h.history[d].note.length);
+    notePreview.innerHTML = latestNoteDate ? `<strong>Note (${latestNoteDate}):</strong> ${escapeHtml(h.history[latestNoteDate].note.slice(0,120))}` : 'No notes yet.';
+    card.appendChild(notePreview);
+
+    feedEl.appendChild(card);
+  });
+}
+
+function renderSummary(){
+  const today = todayISO_UTC();
+  const totalHabits = store.habits.length;
+  const doneToday = store.habits.filter(h=>h.history[today] && h.history[today].done).length;
+  todayPercentEl.textContent = totalHabits ? Math.round((doneToday/totalHabits)*100) + '%' : '0%';
+  todayDoneCountEl.textContent = `${doneToday} of ${totalHabits}`;
+  pointsCountEl.textContent = (store.meta.points||0);
+  // compute aggregated best streak across habits
+  const best = store.meta.bestStreak || 0;
+  streakBadgeEl.textContent = `Streak: ${store.habits.reduce((max,h)=>Math.max(max, computeStreak(h)), 0)}`;
+  bestStreakEl.textContent = `Best: ${best}`;
+  successRateLarge.textContent = computeSuccessRate() + '%';
+}
+
+function renderWeeklyChart(){
+  // simple weekly bar chart across ALL habits (counts per day)
+  const svg = weeklyChartSVG;
+  svg.innerHTML = '';
+  const w = svg.clientWidth || 600;
+  const h = 80;
+  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  const days = 7;
+  const today = todayISO_UTC();
+  const counts = [];
+  for(let i=days-1;i>=0;i--){
+    const iso = new Date(formatISOToLocalDate(today).getTime() - i*24*3600*1000).toISOString().slice(0,10);
+    const c = store.habits.reduce((s,h)=>s + ((h.history[iso] && h.history[iso].done) ? 1:0), 0);
+    counts.push({iso,c});
+  }
+  const max = Math.max(1, ...counts.map(c=>c.c));
+  const barW = Math.max(10, Math.floor(w / days) - 6);
+  counts.forEach((d,i)=>{
+    const bw = barW;
+    const x = i*(w/days) + 8;
+    const bh = Math.round((d.c / max) * (h - 20));
+    const y = h - bh - 8;
+    const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    rect.setAttribute('x', x);
+    rect.setAttribute('y', y);
+    rect.setAttribute('width', bw);
+    rect.setAttribute('height', bh);
+    rect.setAttribute('rx', 4);
+    rect.setAttribute('fill', 'url(#g1)');
+    rect.setAttribute('title', `${d.iso}: ${d.c} completed`);
+    svg.appendChild(rect);
+  });
+  // gradient defs
+  const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+  defs.innerHTML = `<linearGradient id="g1" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#B5CBB7"/><stop offset="1" stop-color="#2E2E2E"/></linearGradient>`;
+  svg.prepend(defs);
+}
+
+// ---------- Modal / day editor ----------
+const modal = document.getElementById('modal');
+const modalContent = document.getElementById('modalContent');
+document.getElementById('modalClose').onclick = ()=>{ closeModal(); };
+
+function openDayEditor(habitId, isoDate){
+  const h = store.habits.find(x=>x.id===habitId);
+  if(!h) return;
+  modalContent.innerHTML = '';
+  const title = document.createElement('h3'); title.textContent = `${h.title} — ${isoDate}`;
+  const noteLabel = document.createElement('div'); noteLabel.textContent='Note:';
+  const ta = document.createElement('textarea'); ta.style.width='100%'; ta.style.minHeight='80px';
+  ta.value = h.history[isoDate]?.note || '';
+  const doneLabel = document.createElement('label');
+  const doneCheckbox = document.createElement('input'); doneCheckbox.type='checkbox';
+  doneCheckbox.checked = !!(h.history[isoDate]?.done);
+  doneLabel.appendChild(doneCheckbox);
+  doneLabel.appendChild(document.createTextNode(' Mark done for this day'));
+  const saveBtn = document.createElement('button'); saveBtn.className='btn'; saveBtn.textContent='Save';
+  saveBtn.onclick = ()=> {
+    setNote(habitId, isoDate, ta.value);
+    if(doneCheckbox.checked && !(h.history[isoDate] && h.history[isoDate].done)) {
+      toggleHabitForDate(habitId, isoDate);
+    } else if(!doneCheckbox.checked && h.history[isoDate] && h.history[isoDate].done){
+      toggleHabitForDate(habitId, isoDate);
+    }
+    closeModal();
+  };
+  modalContent.appendChild(title);
+  modalContent.appendChild(noteLabel);
+  modalContent.appendChild(ta);
+  modalContent.appendChild(doneLabel);
+  modalContent.appendChild(document.createElement('div'));
+  modalContent.appendChild(saveBtn);
+  openModal();
+}
+
+function openHabitModal(habitId){
+  const h = store.habits.find(x=>x.id===habitId);
+  if(!h) return;
+  modalContent.innerHTML = `<h3>${escapeHtml(h.title)}</h3>
+    <div class="small">Category: ${escapeHtml(h.category)}</div>
+    <div style="margin-top:8px;">Best streak: <strong>${computeBestStreak(h)}</strong></div>
+    <div style="margin-top:8px;">Points: <strong>${h.points||0}</strong></div>
+    <div style="margin-top:10px;">
+      <button class="btn" id="deleteHabitBtn">Delete habit</button>
+      <button class="btn secondary" id="setReminderBtn">Set Reminder</button>
+      <button class="btn secondary" id="exportHabitBtn">Export CSV</button>
+    </div>
+    <div style="margin-top:10px;" class="small">Click any day in the heatmap to edit notes or toggle completion.</div>`;
+  // attach handlers
+  setTimeout(()=>{
+    document.getElementById('deleteHabitBtn').onclick = ()=> {
+      if(confirm('Delete this habit? This cannot be undone.')) {
+        store.habits = store.habits.filter(x=>x.id!==habitId);
+        writeStore(store);
+        closeModal();
+        renderAll();
+      }
+    };
+    document.getElementById('setReminderBtn').onclick = ()=> {
+      requestNotificationPermission();
+      alert('Reminder UI: create a reminder after allowing notifications. (PWA is recommended for reliable scheduled notifications.)');
+    };
+    document.getElementById('exportHabitBtn').onclick = ()=> {
+      exportHabitCSV(habitId);
+    };
+  },60);
+  openModal();
+}
+
+function openModal(){ modal.style.display='flex'; }
+function closeModal(){ modal.style.display='none'; modalContent.innerHTML=''; }
+
+// ---------- Add habit form ----------
+document.getElementById('addBtn').onclick = ()=>{
+  const title = document.getElementById('habitTitle').value.trim();
+  const category = document.getElementById('habitCategory').value;
+  if(!title) return;
+  createHabit({title,category});
+  document.getElementById('habitTitle').value='';
+};
+
+// ---------- Export CSV ----------
+function exportAllCSV(){
+  const rows = ['habit_id,habit_title,date,done,note'];
+  store.habits.forEach(h=>{
+    Object.keys(h.history).forEach(d=>{
+      rows.push([h.id, `"${h.title.replace(/"/g,'""')}"`, d, h.history[d].done ? '1' : '0', `"${(h.history[d].note||'').replace(/"/g,'""')}"`].join(','));
+    });
+  });
+  downloadText(rows.join('\\n'), 'fx-habits-export.csv');
+}
+function exportHabitCSV(habitId){
+  const h = store.habits.find(x=>x.id===habitId);
+  if(!h) return;
+  const rows = ['date,done,note'];
+  Object.keys(h.history).forEach(d=>{
+    rows.push([d, h.history[d].done ? '1':'0', `"${(h.history[d].note||'').replace(/"/g,'""')}"`].join(','));
+  });
+  downloadText(rows.join('\\n'), `${slugify(h.title)}.csv`);
+}
+function downloadText(txt, filename){
+  const blob = new Blob([txt], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
+// ---------- Misc UI helpers ----------
+function toast(msg, time=2200){
+  const t = document.createElement('div'); t.textContent = msg;
+  t.style.position='fixed'; t.style.bottom='86px'; t.style.left='50%'; t.style.transform='translateX(-50%)';
+  t.style.background='rgba(0,0,0,0.78)'; t.style.color='white'; t.style.padding='10px 14px'; t.style.borderRadius='10px';
+  document.body.appendChild(t);
+  setTimeout(()=> t.style.opacity='0', time-400);
+  setTimeout(()=> t.remove(), time);
+}
+
+function escapeHtml(s){ return (s||'').replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])); }
+function slugify(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
+
+// ---------- Theme handling ----------
+const themeToggle = document.getElementById('themeToggle');
+const savedTheme = localStorage.getItem('fx_theme');
+if(savedTheme === 'dark') document.body.classList.add('dark');
+themeToggle.onclick = ()=> {
+  document.body.classList.toggle('dark');
+  localStorage.setItem('fx_theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+};
+
+// ---------- Quotes & AI suggestions ----------
+const QUOTES = [
+  {q:"Start small. Consistency compounds.", a:"FX Tips"},
+  {q:"A little progress each day adds up to big results.", a:"Habit Science"},
+  {q:"Make it easy: remove friction and celebrate wins.", a:"Productivity Lab"},
+  {q:"If it takes less than 2 minutes, do it now.", a:"Two Minute Rule"},
+  {q:"You don’t rise to the level of your goals — you fall to the level of your systems.", a:"James Clear"}
+];
+function renderInspiration(){
+  const idx = Math.floor(Math.random()*QUOTES.length);
+  const q = QUOTES[idx];
+  quoteText.textContent = `"${q.q}"`;
+  quoteAuthor.textContent = `— ${q.a}`;
+  // quick sample AI suggestions (local rule engine)
+  aiSuggestions.innerHTML = '';
+  const suggestions = generateSuggestions();
+  suggestions.slice(0,6).forEach(s=>{
+    const b = document.createElement('button'); b.className='btn secondary'; b.style.borderRadius='8px';
+    b.textContent = s;
+    b.onclick = ()=> createHabit({title:s, category:'Suggested'});
+    aiSuggestions.appendChild(b);
+  });
+}
+document.getElementById('newQuoteBtn').onclick = renderInspiration;
+
+function generateSuggestions(){
+  // simple rule-based suggestions based on existing categories
+  const cats = {};
+  store.habits.forEach(h=>cats[h.category] = (cats[h.category]||0) + 1);
+  const suggestions = ['Drink water (8 glasses)', 'Read 20 minutes', 'Walk 15 minutes', 'Meditate 5 minutes', 'No sugar today', '10 pushups'];
+  if(cats['Study']) suggestions.unshift('Review notes (10 min)');
+  if(cats['Fitness']) suggestions.unshift('Stretch 5 minutes');
+  return suggestions;
+}
+
+// ---------- Notifications (basic) ----------
+async function requestNotificationPermission(){
+  if(!('Notification' in window)) { alert('Notifications not supported in this browser.'); return; }
+  const perm = await Notification.requestPermission();
+  if(perm === 'granted') {
+    toast('Notifications enabled. Reminder scheduling is limited in browsers. Consider installing as PWA.');
+  } else {
+    toast('Notifications blocked. You can enable them in browser settings.');
+  }
+}
+
+// ---------- Simple sync stub (for Firebase / server) ----------
+document.getElementById('syncBtn').onclick = ()=> {
+  alert('Cloud sync: stub. Integrate Firebase Auth + Firestore for real sync. (See README.)');
+};
+
+// ---------- Export / top actions ----------
+document.getElementById('exportBtn').onclick = ()=> exportAllCSV();
+
+// ---------- Share ----------
+document.getElementById('navShare').onclick = ()=>{
+  const text = `I\'m using FX Habit Tracker — my current streaks: ` + store.habits.map(h=>`${h.title}: ${computeStreak(h)}d`).join('; ');
+  if(navigator.share){
+    navigator.share({title:'FX Habit Tracker', text});
+  } else {
+    navigator.clipboard.writeText(text).then(()=>toast('Copied share text to clipboard'));
+  }
+};
+
+// ---------- Small helpers for first-run demo data ----------
+if(store.habits.length === 0){
+  // create sample habits to show UI richness
+  createHabit({title:'Drink water', category:'Health'});
+  createHabit({title:'Read 20 minutes', category:'Study'});
+  createHabit({title:'Walk 15 minutes', category:'Fitness'});
+  // prefill some history demo:
+  const demo = readStore();
+  const h0 = demo.habits[0];
+  const h1 = demo.habits[1];
+  const today = todayISO_UTC();
+  const back = (n) => new Date(formatISOToLocalDate(today).getTime() - n*24*3600*1000).toISOString().slice(0,10);
+  h0.history[back(1)] = {done:true, note:''};
+  h0.history[back(2)] = {done:true, note:''};
+  h0.history[today] = {done:true, note:'Felt hydrated!'};
+  h1.history[back(1)] = {done:true, note:'Page 20'};
+  writeStore(demo);
+}
+
+// initial render
+renderAll();
+
+// ---------- Utilities continued ----------
+function escapeHtml(s){ return (s||'').replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])); }
+
+// ---------- Simple debounce for beforeunload saving ----------
+window.addEventListener('beforeunload', ()=> writeStore(store) );
+// --- Robust Slide-out menu logic (use this in place of any earlier menu JS) ---
+document.addEventListener('DOMContentLoaded', () => {
+  const menuToggle = document.getElementById('menuToggle'); // top-right burger
+  const sideMenu = document.getElementById('sideMenu');
+  const menuOverlay = document.getElementById('menuOverlay');
+  const closeMenuBtn = document.getElementById('closeMenu');
+
+  // If any required element is missing, output helpful console message and bail gracefully.
+  if(!menuToggle) console.warn('menuToggle button not found (id="menuToggle"). Make sure it exists in header.');
+  if(!sideMenu) console.warn('sideMenu element not found (id="sideMenu").');
+  if(!menuOverlay) console.warn('menuOverlay element not found (id="menuOverlay").');
+  if(!closeMenuBtn) console.warn('closeMenu button not found (id="closeMenu").');
+
+  // Open / close helpers
+  function openMenu(){
+    if(!sideMenu || !menuOverlay) return;
+    sideMenu.classList.add('open');
+    sideMenu.setAttribute('aria-hidden', 'false');
+    menuOverlay.classList.add('show');
+    // prevent body scroll while menu open
+    document.body.style.overflow = 'hidden';
+  }
+  function closeMenu(){
+    if(!sideMenu || !menuOverlay) return;
+    sideMenu.classList.remove('open');
+    sideMenu.setAttribute('aria-hidden', 'true');
+    menuOverlay.classList.remove('show');
+    document.body.style.overflow = ''; // restore
+  }
+
+  if(menuToggle) menuToggle.addEventListener('click', openMenu);
+  if(closeMenuBtn) closeMenuBtn.addEventListener('click', closeMenu);
+  if(menuOverlay) menuOverlay.addEventListener('click', closeMenu);
+
+  // Keyboard: ESC closes menu
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape') closeMenu();
+  });
+
+  // Wire settings buttons (these are the unique IDs used inside the menu)
+  const themeToggleMenu = document.getElementById('themeToggleMenu');
+  const syncBtnMenu = document.getElementById('syncBtnMenu');
+
+  // Reuse existing theme toggle behavior if present
+  const headerThemeToggle = document.getElementById('themeToggle'); // may or may not exist
+  function toggleTheme() {
+    // Prefer calling existing handler if present
+    if(headerThemeToggle) {
+      headerThemeToggle.click(); // trigger the header toggle (which already handles class + localStorage)
+      return;
+    }
+    // Otherwise toggle here
+    document.body.classList.toggle('dark');
+    localStorage.setItem('fx_theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+  }
+
+  if(themeToggleMenu) themeToggleMenu.addEventListener('click', () => {
+    toggleTheme();
+    // keep menu open so user sees the effect (optional: close menu automatically)
+    // closeMenu();
+  });
+
+  // Wire sync button: call existing sync stub if present
+  const headerSyncBtn = document.getElementById('syncBtn');
+  if(syncBtnMenu) syncBtnMenu.addEventListener('click', () => {
+    if(headerSyncBtn) headerSyncBtn.click();
+    else alert('Cloud sync stub — integrate backend to enable real sync.');
+  });
+
+  // Accessibility: keep focus inside menu while open (simple trap)
+  sideMenu && sideMenu.addEventListener('keydown', (e) => {
+    if(e.key === 'Tab') {
+      const focusable = sideMenu.querySelectorAll('a, button, [tabindex]:not([tabindex="-1"])');
+      if(!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length-1];
+      if(e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if(!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  });
+
+  // Small guard: if menu opened but page was changed (link clicked), close
+  sideMenu && sideMenu.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', closeMenu);
+  });
+});
+// END of script
+</script>
+</body>
+</html>

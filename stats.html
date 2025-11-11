@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>FX Habit Tracker — Stats</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2E2E2E">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: linear-gradient(180deg, #e4ebe5, #f7f5f2);
+      margin: 0;
+      color: #2E2E2E;
+    }
+
+    /* --- Header (copied and matched from Calendar) --- */
+    .app-header {
+      background-color: #2E2E2E;
+      text-align: center;
+      padding: 1rem 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    #app-logo {
+      width: 120px;
+      height: auto;
+      border-radius: 8px;
+    }
+
+    .logo-wrap h1 {
+      font-size: 1.5rem;
+      color: #F3EFE6;
+      font-weight: 700;
+      margin: 0;
+      text-align: center;
+    }
+
+    .app-header nav {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      margin-top: 0.75rem;
+    }
+
+    .app-header nav a {
+      text-decoration: none;
+      font-weight: 600;
+      color: #F3EFE6;
+      transition: 0.3s ease;
+    }
+
+    .app-header nav a:hover,
+    .app-header nav a.active {
+      color: #B5CBB7;
+      text-decoration: underline;
+    }
+
+    /* --- Main content --- */
+    .container {
+      max-width: 700px;
+      margin: 2rem auto;
+      padding: 1rem;
+    }
+
+    .card {
+      background: #fdfcfb;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    }
+
+    h2 {
+      margin-bottom: 0.5rem;
+    }
+
+    .muted {
+      color: #777;
+      font-size: 0.9rem;
+    }
+
+    .input-group {
+      margin-top: 1rem;
+    }
+
+    select {
+      width: 100%;
+      padding: 0.6rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-top: 0.3rem;
+      background: #fff;
+    }
+
+    .chart-section {
+      margin: 2rem 0;
+      text-align: center;
+    }
+
+    #weeklyChart {
+      width: 100%;
+      max-height: 300px;
+    }
+
+    .stats-summary {
+      background: #f8f9f8;
+      padding: 1rem;
+      border-radius: 8px;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 0.85rem;
+      padding: 1rem 0;
+      background: transparent;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Header (now matches Calendar page) -->
+  <header class="app-header">
+    <div class="logo-wrap">
+      <img id="app-logo" src="assetslogo-placeholder.png" alt="FX Habit Tracker Logo" />
+      <h1>FX Habit Tracker</h1>
+    </div>
+    <nav>
+      <a href="app.html">Home</a>
+      <a href="calendar.html">Calendar</a>
+      <a href="stats.html" class="active">Stats</a>
+      <a href="about.html">about</a>
+    </nav>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container">
+    <section class="card">
+      <h2>Your Progress Overview</h2>
+      <p class="muted">Track your growth and visualize your streaks below.</p>
+
+      <div class="input-group">
+        <label for="stats-habit">Select Habit</label>
+        <select id="stats-habit">
+          <option value="">Choose habit</option>
+          <option value="Morning Run">Morning Run</option>
+          <option value="Read 10 Pages">Read 10 Pages</option>
+          <option value="Meditation">Meditation</option>
+        </select>
+      </div>
+
+      <div class="chart-section">
+        <canvas id="weeklyChart"></canvas>
+      </div>
+
+      <div id="stats-summary" class="stats-summary">
+        <h3>Your Summary</h3>
+        <p class="muted">Detailed stats will appear here once you select a habit.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer muted">
+    © <span id="year3"></span> FX Habit Tracker
+  </footer>
+
+  <!-- JavaScript (unchanged) -->
+  <script>
+    document.getElementById("year3").textContent = new Date().getFullYear();
+
+    const ctx = document.getElementById("weeklyChart").getContext("2d");
+    let chartInstance;
+
+    const habitsData = {
+      "Morning Run": [5, 4, 6, 7, 5, 6, 7],
+      "Read 10 Pages": [3, 5, 2, 4, 6, 3, 5],
+      "Meditation": [2, 3, 5, 6, 4, 7, 5],
+    };
+
+    const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+    function createChart(habit) {
+      const data = habitsData[habit] || [0, 0, 0, 0, 0, 0, 0];
+      if (chartInstance) chartInstance.destroy();
+
+      chartInstance = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: `${habit} Progress`,
+            data: data,
+            backgroundColor: "#9dd0a8",
+            borderRadius: 8
+          }]
+        },
+        options: {
+          scales: {
+            y: { beginAtZero: true, grid: { color: "#eee" } },
+            x: { grid: { display: false } }
+          },
+          plugins: {
+            legend: { display: false }
+          },
+          animation: {
+            duration: 1000,
+            easing: "easeOutQuart"
+          }
+        }
+      });
+
+      updateSummary(habit, data);
+    }
+
+    function updateSummary(habit, data) {
+      const avg = (data.reduce((a,b) => a + b, 0) / data.length).toFixed(1);
+      const max = Math.max(...data);
+      const summary = document.getElementById("stats-summary");
+      summary.innerHTML = `
+        <h3>${habit} Summary</h3>
+        <p><strong>Average:</strong> ${avg}/7 days</p>
+        <p><strong>Best Day:</strong> ${max} completions</p>
+      `;
+    }
+
+    document.getElementById("stats-habit").addEventListener("change", (e) => {
+      const habit = e.target.value;
+      if (habit) createChart(habit);
+    });
+  </script>
+</body>
+</html>

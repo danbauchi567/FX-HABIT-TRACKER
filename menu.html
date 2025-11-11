@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<title>Menu — FX Habit Tracker</title>
+<style>
+  :root {
+    --bg: #F3EFE6; /* Soft Beige */
+    --card: #ffffff;
+    --primary: #2E2E2E; /* Charcoal */
+    --accent: #B5CBB7; /* Sage */
+    --muted: #7b7b7b;
+    --radius: 12px;
+  }
+
+  body {
+    margin: 0;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background: var(--bg);
+    color: var(--primary);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  header {
+    background: var(--primary);
+    color: white;
+    padding: 16px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 18px;
+  }
+
+  main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  a.menu-item {
+    display: block;
+    text-decoration: none;
+    background: var(--card);
+    color: var(--primary);
+    padding: 14px 16px;
+    border-radius: var(--radius);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  a.menu-item:hover {
+    background: var(--accent);
+  }
+
+  .section-title {
+    margin-top: 10px;
+    font-size: 14px;
+    text-transform: uppercase;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  /* Settings area */
+  .settings {
+    background: var(--card);
+    padding: 16px;
+    border-radius: var(--radius);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  }
+
+  .setting-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+  }
+
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 46px;
+    height: 24px;
+  }
+
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #ccc;
+    border-radius: 24px;
+    transition: 0.3s;
+  }
+
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 18px; width: 18px;
+    left: 3px; bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.3s;
+  }
+
+  input:checked + .slider {
+    background-color: var(--accent);
+  }
+
+  input:checked + .slider:before {
+    transform: translateX(22px);
+  }
+
+  /* Dark mode */
+  body.dark {
+    background: #0e0e0f;
+    color: #eaeaea;
+  }
+  body.dark header { background: #1e1e1f; }
+  body.dark .menu-item,
+  body.dark .settings {
+    background: #1e1e1f;
+    color: #eaeaea;
+  }
+</style>
+</head>
+<body>
+  <header>☰ Menu</header>
+
+  <main>
+  <a href="app.html" class="menu-item">🏠 Home</a>
+  <a href="stats.html" class="menu-item">📊 Stats</a>
+  <a href="about.html" class="menu-item">ℹ️ About</a>
+  <a href="calendar.html" class="menu-item">📅 Calendar</a>
+  <a href="new premium.html" class="menu-item">💎 Premium Plan</a>
+  <a href="signout.html" class="menu-item">🚪 Sign Out</a>
+
+  <div class="section-title">Settings</div>
+  <div class="settings">
+    <div class="setting-item">
+      <span>🌙 Dark Mode</span>
+      <label class="switch">
+        <input type="checkbox" id="themeToggle">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="setting-item">
+      <span>☁️ Cloud Sync</span>
+      <button id="syncBtn" style="background: var(--accent); border: none; padding: 6px 12px; border-radius: 8px; cursor:pointer;">Sync</button>
+    </div>
+  </div>
+</main>
+
+  <script>
+    // Load and apply saved theme
+    const savedTheme = localStorage.getItem('fx_theme');
+    if (savedTheme === 'dark') {
+      document.body.classList.add('dark');
+      document.getElementById('themeToggle').checked = true;
+    }
+
+    // Toggle theme
+    document.getElementById('themeToggle').addEventListener('change', e => {
+      document.body.classList.toggle('dark', e.target.checked);
+      localStorage.setItem('fx_theme', e.target.checked ? 'dark' : 'light');
+    });
+
+    // Cloud Sync stub
+    document.getElementById('syncBtn').addEventListener('click', () => {
+      alert('Cloud sync: stub. Integrate Firebase Auth + Firestore for real sync.');
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+/* ===== Reset ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+/* ===== Body ===== */
+body {
+  background-color: #F3EFE6; /* Soft Beige */
+  color: #2E2E2E; /* Charcoal */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+/* ===== Container ===== */
+.login-container {
+  background-color: white;
+  padding: 2.5rem;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+}
+
+/* ===== Headings ===== */
+h2 {
+  font-size: 1.8rem;
+  margin-bottom: 10px;
+  color: #2E2E2E;
+}
+
+p {
+  margin-bottom: 20px;
+  color: #555;
+}
+
+/* ===== Inputs ===== */
+input {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  background-color: #F9F9F9;
+}
+
+/* ===== Buttons ===== */
+button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+#signup-btn, #login-btn {
+  background-color: #2E2E2E; /* Charcoal */
+  color: #F3EFE6; /* Soft Beige */
+}
+
+#signup-btn:hover, #login-btn:hover {
+  background-color: #444;
+}
+
+#google-signup, #google-login {
+  background-color: #B5CBB7; /* Sage */
+  color: #2E2E2E;
+}
+
+#google-signup:hover, #google-login:hover {
+  background-color: #A2B9A2;
+}
+
+/* ===== Small text ===== */
+.small-text {
+  font-size: 0.9rem;
+  color: #444;
+}
+
+.small-text a {
+  color: #2E2E2E;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.small-text a:hover {
+  text-decoration: underline;
+}

@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Calendar — FX Habit Tracker</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="csscalender.css"><style>.app-header nav {
+  display: flex;
+  justify-content: center;   /* centers the whole group */
+  gap: 2rem;                 /* space between items */
+  align-items: center;
+  flex-wrap: wrap;           /* wraps neatly on smaller screens */
+  margin-top: 10px;
+}
+
+.app-header nav a {
+  text-decoration: none;
+  font-weight: 600;
+  color: #F3EFE6;            /* Soft Beige */
+  transition: 0.3s ease;
+}
+
+.app-header nav a:hover,
+.app-header nav a.active {
+  color: #B5CBB7;            /* Sage */
+  text-decoration: underline;
+}
+.app-header {
+  background-color: #2E2E2E;  /* Charcoal */
+  text-align: center;
+  padding: 1rem;
+}
+
+.logo-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+}
+
+.logo-wrap h1 {
+  color: #F3EFE6;
+  font-size: 1.5rem;
+  margin: 0;
+}
+/* Header container */
+.app-header {
+  background-color: #2E2E2E;  /* Charcoal */
+  text-align: center;
+  padding: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Logo and title wrapper */
+.logo-wrap {
+  display: flex;
+  flex-direction: column; /* stack logo and text vertically */
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* Logo image */
+#app-logo {
+  width: 120px;   /* adjust this to control size */
+  height: auto;
+  border-radius: 8px; /* optional soft corners */
+}
+
+/* App title text */
+.logo-wrap h1 {
+  font-size: 1.5rem;
+  color: #F3EFE6; /* Soft Beige */
+  font-weight: 700;
+  margin: 0;
+  text-align: center;
+}
+
+/* Navigation links */
+.app-header nav {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+}
+
+.app-header nav a {
+  text-decoration: none;
+  font-weight: 600;
+  color: #F3EFE6;
+  transition: 0.3s ease;
+}
+
+.app-header nav a:hover,
+.app-header nav a.active {
+  color: #B5CBB7; /* Sage */
+  text-decoration: underline;
+}
+</style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="logo-wrap">
+      <img id="app-logo" src="assetslogo-placeholder.png" alt="FX Habit Tracker Logo" />
+      <h1>FX Habit Tracker</h1>
+    </div>
+    <nav>
+      <a href="app.html">Home</a>
+      <a href="calendar.html" class="active">Calendar</a>
+      <a href="stats.html">Stats</a>
+      <a href="about.html">about</a>
+    </nav>
+  </header>
+
+  <main class="calendar-container">
+    <section class="calendar-header">
+      <h2>Your Habit Calendar</h2>
+      <p>Track your consistency — tap any date to mark completed or add a note.</p>
+      <select id="habitSelector" class="habit-dropdown"></select>
+    </section>
+
+    <section id="calendarWrapper" class="calendar-grid">
+      <!-- Calendar days will be injected here -->
+    </section>
+
+    <dialog id="dayModal" class="modal">
+      <form method="dialog" id="dayForm">
+        <h3 id="dayTitle">Day Details</h3>
+        <label>
+          Completed
+          <input type="checkbox" id="dayCompleted" />
+        </label>
+        <label>
+          Notes
+          <textarea id="dayNote" rows="4" placeholder="Add a short note..."></textarea>
+        </label>
+        <div class="modal-actions">
+          <button id="saveDay">Save</button>
+          <button id="cancelDay">Cancel</button>
+        </div>
+      </form>
+    </dialog>
+  </main>
+
+  <footer class="footer">
+    <p>FX Habit Tracker © 2025 — Stay consistent, stay focused 🌱</p>
+  </footer>
+
+  <!-- ✅ JavaScript embedded directly -->
+  <script>
+    const calendarWrapper = document.getElementById("calendarWrapper");
+    const habitSelector = document.getElementById("habitSelector");
+    const dayModal = document.getElementById("dayModal");
+    const dayTitle = document.getElementById("dayTitle");
+    const dayCompleted = document.getElementById("dayCompleted");
+    const dayNote = document.getElementById("dayNote");
+    const saveDay = document.getElementById("saveDay");
+    const cancelDay = document.getElementById("cancelDay");
+
+    let selectedHabit = "";
+    let habits = ["Morning Run", "Meditation", "Read 20 mins", "No Sugar"];
+    let habitData = {}; // { habitName: { "YYYY-MM-DD": { done: bool, note: "" } } }
+    let selectedDate = "";
+
+    init();
+
+    function init() {
+      loadData();
+      populateHabitSelector();
+      renderCalendar();
+      setupModal();
+    }
+
+    function loadData() {
+      const stored = localStorage.getItem("habitData");
+      if (stored) habitData = JSON.parse(stored);
+      else habitData = {};
+    }
+
+    function saveData() {
+      localStorage.setItem("habitData", JSON.stringify(habitData));
+    }
+
+    function populateHabitSelector() {
+      habitSelector.innerHTML = habits.map(h => `<option value="${h}">${h}</option>`).join("");
+      selectedHabit = habitSelector.value;
+      habitSelector.addEventListener("change", () => {
+        selectedHabit = habitSelector.value;
+        renderCalendar();
+      });
+    }
+
+    function renderCalendar() {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = today.getMonth();
+
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const startDayOfWeek = firstDay.getDay();
+
+      calendarWrapper.innerHTML = "";
+
+      const monthName = today.toLocaleString("default", { month: "long" });
+      const title = document.createElement("h3");
+      title.textContent = `${monthName} ${year}`;
+      title.style.textAlign = "center";
+      title.style.marginBottom = "10px";
+      calendarWrapper.appendChild(title);
+
+      const grid = document.createElement("div");
+      grid.className = "calendar-grid";
+
+      for (let i = 0; i < startDayOfWeek; i++) {
+        const blank = document.createElement("div");
+        blank.className = "day-cell blank";
+        grid.appendChild(blank);
+      }
+
+      for (let d = 1; d <= lastDay.getDate(); d++) {
+        const date = new Date(year, month, d);
+        const dateKey = formatDateKey(date);
+
+        const dayCell = document.createElement("div");
+        dayCell.className = "day-cell";
+        dayCell.textContent = d;
+
+        const record = getDayRecord(selectedHabit, dateKey);
+        if (record.done) dayCell.classList.add("done");
+        if (record.note) dayCell.classList.add("has-note");
+
+        dayCell.addEventListener("click", () => openDayModal(dateKey, d));
+        grid.appendChild(dayCell);
+      }
+
+      calendarWrapper.appendChild(grid);
+    }
+
+    function formatDateKey(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function getDayRecord(habit, dateKey) {
+      if (!habitData[habit]) habitData[habit] = {};
+      if (!habitData[habit][dateKey]) habitData[habit][dateKey] = { done: false, note: "" };
+      return habitData[habit][dateKey];
+    }
+
+    function setupModal() {
+      cancelDay.addEventListener("click", () => {
+        dayModal.close();
+      });
+
+      saveDay.addEventListener("click", e => {
+        e.preventDefault();
+        if (!selectedDate || !selectedHabit) return;
+
+        const record = getDayRecord(selectedHabit, selectedDate);
+        record.done = dayCompleted.checked;
+        record.note = dayNote.value.trim();
+        saveData();
+        renderCalendar();
+        dayModal.close();
+      });
+    }
+
+    function openDayModal(dateKey, dayNum) {
+      selectedDate = dateKey;
+      const record = getDayRecord(selectedHabit, dateKey);
+
+      dayTitle.textContent = `Day ${dayNum}`;
+      dayCompleted.checked = record.done;
+      dayNote.value = record.note;
+      dayModal.showModal();
+    }
+  </script>
+<script>
+  const isPremium = localStorage.getItem('fx_premium') === 'true';
+  if (!isPremium) {
+    console.log('User is free version');
+    // Optional: Hide premium-only buttons or features here
+  } else {
+    console.log('Premium features unlocked!');
+    // Example: Show extra stats, custom themes, etc.
+  }
+</script>
+
+</body>
+</html>

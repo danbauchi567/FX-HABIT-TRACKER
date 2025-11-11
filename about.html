@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>About — FX Habit Tracker</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2E2E2E">
+
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: linear-gradient(180deg, #e4ebe5, #f7f5f2);
+      margin: 0;
+      color: #2E2E2E;
+    }
+
+    /* Header (same as other pages) */
+    .app-header {
+      background-color: #2E2E2E;
+      text-align: center;
+      padding: 1rem 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    #app-logo {
+      width: 120px;
+      height: auto;
+      border-radius: 8px;
+    }
+
+    .logo-wrap h1 {
+      font-size: 1.5rem;
+      color: #F3EFE6;
+      font-weight: 700;
+      margin: 0;
+      text-align: center;
+    }
+
+    .app-header nav {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      margin-top: 0.75rem;
+    }
+
+    .app-header nav a {
+      text-decoration: none;
+      font-weight: 600;
+      color: #F3EFE6;
+      transition: 0.3s ease;
+    }
+
+    .app-header nav a:hover,
+    .app-header nav a.active {
+      color: #B5CBB7;
+      text-decoration: underline;
+    }
+
+    /* Main content */
+    .container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 1rem;
+    }
+
+    .section {
+      background: #fdfcfb;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+      margin-bottom: 2rem;
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #2E2E2E;
+    }
+
+    p {
+      line-height: 1.6;
+      color: #444;
+    }
+
+    /* Contact Form */
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    label {
+      font-weight: 600;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: inherit;
+    }
+
+    button {
+      background: #2E2E2E;
+      color: #fff;
+      border: none;
+      padding: 0.8rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    button:hover {
+      background: #4E4E4E;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 0.85rem;
+      padding: 1rem 0;
+      background: transparent;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="logo-wrap">
+      <img id="app-logo" src="assetslogo-placeholder.png" alt="FX Habit Tracker Logo" />
+      <h1>FX Habit Tracker</h1>
+    </div>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="calendar.html">Calendar</a>
+      <a href="stats.html">Stats</a>
+      <a href="about.html" class="active">About</a>
+    </nav>
+  </header>
+
+  <!-- About Section -->
+  <main class="container">
+    <section class="section">
+      <h2>About FX Habit Tracker</h2>
+      <p><strong>FX Habit Tracker</strong> helps you build positive habits and stay consistent every day. 
+      Whether you’re trying to exercise more, read daily, or meditate, this simple and clean tool lets you 
+      track your progress and visualize your streaks.</p>
+
+      <p>Our goal is to help you stay focused, motivated, and aware of your daily progress — 
+      because small steps taken consistently create big changes over time.</p>
+    </section>
+
+    <!-- Privacy & Policy -->
+    <section class="section">
+      <h2>Privacy & Policy</h2>
+      <p>We value your privacy. All your data is stored locally on your device — we do not collect or share 
+      any personal information. Your habits, notes, and statistics remain 100% private to you.</p>
+
+      <p>If you clear your browser’s storage, your data may be removed, so remember to back it up 
+      if needed. We are committed to maintaining a simple and safe user experience.</p>
+    </section>
+
+    <!-- Contact Form -->
+    <section class="section">
+      <h2>Contact Us</h2>
+      <p>Have questions, feedback, or suggestions? We’d love to hear from you. 
+      Use the form below to get in touch.</p>
+
+      <form id="contactForm">
+        <div>
+          <label for="name">Name</label>
+          <input type="text" id="name" name="name" placeholder="Your full name" required>
+        </div>
+
+        <div>
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" placeholder="yourname@gmail.com" required>
+        </div>
+
+        <div>
+          <label for="message">Message</label>
+          <textarea id="message" name="message" rows="5" placeholder="Write your message here..." required></textarea>
+        </div>
+
+        <button type="submit">Send Message</button>
+      </form>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer muted">
+    © <span id="year4"></span> FX Habit Tracker — Stay consistent, stay focused 🌱
+  </footer>
+
+  <!-- Optional JavaScript (for form feedback only) -->
+  <script>
+    document.getElementById("year4").textContent = new Date().getFullYear();
+
+    const contactForm = document.getElementById("contactForm");
+    contactForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      alert("Thank you for contacting us! We'll get back to you soon.");
+      contactForm.reset();
+    });
+  </script>
+</body>
+</html>
